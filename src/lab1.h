@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 
 #define M_PI 3.14159265358979323846
@@ -16,6 +17,7 @@ typedef struct {
 	double latitude;
 	double longitude;
 	double altitude;
+	double tas;
 } Coord ;
 
 /* int read_file(void); */
@@ -23,3 +25,4 @@ double coord_dist(Coord waypoint1, Coord waypoint2);
 Coord coord_fromdist(Coord waypoint1, double dist, double heading, double climb);
 double depheading(Coord waypoint1, Coord waypoint2);
 double appheading(Coord waypoint1, Coord waypoint2);
+int read_file(Coord* waypoint);

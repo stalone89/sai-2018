@@ -6,6 +6,8 @@ int main(void){
 	Coord waypoint_previous, waypoint_next;
 	Coord position_previous, position_current;
 	
+	Coord waypointlist[12];
+	
 	double tas, heading, altituderate, timespan;
 	double dist, climb;
 	
@@ -53,6 +55,8 @@ int main(void){
 	printf("Number of subpoints at current TAS: %f\n", dist / (timespan * tas) - 1);
 	printf("Total distance traveled: %f\n", totaldistance);
 	printf("Number of subpoints traveled at current TAS: %f\n", totaldistance / (timespan * tas) - 1);
+	
+	read_file(waypointlist);
 	
 	return 0;
 }
