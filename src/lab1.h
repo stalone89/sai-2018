@@ -26,3 +26,4 @@ Coord coord_fromdist(Coord waypoint1, double dist, double heading, double climb)
 double depheading(Coord waypoint1, Coord waypoint2);
 double appheading(Coord waypoint1, Coord waypoint2);
 int read_file(Coord* waypoint);
+Coord csv_waypoint_parse(char line[]);

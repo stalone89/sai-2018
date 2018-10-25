@@ -43,35 +43,57 @@ double appheading(Coord waypoint1, Coord waypoint2){
 
 int read_file(Coord* waypointlist){
 	/* Accepts a Coord array to fill with waypoints from a file.
-	 * File syntax isn't ideal, could use work.
 	 * Returns 0 in case of success, 1 in case of file opening failure. */
 	
-	/* char filename[13] = "waypoints.csv"; */
-	
-	char city[20];
-	double latitude, longitude, altitude, tas;
-	
+	char* filename = "waypoints.csv";
 	int i = 0;
+	
+	char line[100];
 	
 	FILE* fid;
 	
-	if ((fid = fopen("waypoints.csv","r")) == NULL){
-		printf("Error opening waypoint file.\n");
-		return(1);
+	if ((fid = fopen(filename,"r")) == NULL){
+		printf("Error opening waypoints.csv file.\n");
+		return 1;
 	}
 	
+	fscanf(fid,"%s\n", line); /* Skip first line */
+	
 	while (!feof(fid)){
-		if (fscanf(fid,"%s %lf %lf %lf %lf\n", city, &latitude, &longitude, &altitude, &tas)){
-			printf("Lat/Lon = %f %f / Altitude = %f / TAS = %f / City is %s\n", latitude, longitude, altitude, tas, city);
-		}
-		
-		waypointlist[i].latitude = latitude;
-		waypointlist[i].longitude = longitude;
-		waypointlist[i].altitude = altitude;
-		waypointlist[i].tas = tas;
-		
+		fscanf(fid,"%s\n", line);
+		waypointlist[i] = csv_waypoint_parse(line);
+		printf("Latitude = %f, Longitude = %f, Altitude = %fm, TAS = %f\n", waypointlist[i].latitude, waypointlist[i].longitude, waypointlist[i].altitude, waypointlist[i].tas);
 		i++;
 	}
 	
 	return 0;
+}
+
+Coord csv_waypoint_parse(char line[]){
+	/* Accepts a string formatted according to a line from the provided CSV file */
+	/* Returns the line's corresponding waypoint */
+	
+	int i = 0;
+	char* field;
+	Coord waypoint;
+	
+	field = strtok(line, ",");
+	i++;
+	
+	while(field != NULL){
+		field = strtok(NULL, ",");
+		switch(i){
+			case 1:
+				sscanf(field, "%lf", &waypoint.latitude);
+			case 2:
+				sscanf(field, "%lf", &waypoint.longitude);
+			case 3:
+				sscanf(field, "%lf", &waypoint.altitude);
+			case 4:
+				sscanf(field, "%lf", &waypoint.tas);
+		}
+		i++;
+	}
+	
+	return waypoint;
 }
