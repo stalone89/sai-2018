@@ -76,7 +76,7 @@ Waypoint csv_waypoint_parse(char line[]){
 	
 	int i = 0;
 	char* field;
-	Coord waypoint;
+	Waypoint waypoint;
 	
 	field = strtok(line, ",");
 	i++;

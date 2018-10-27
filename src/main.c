@@ -6,7 +6,9 @@ int main(void){
 	Coord waypoint_previouspos, waypoint_nextpos;
 	Coord position_previous, position_current;
 	
-	double tas, heading, altituderate, timespan;
+	Waypoint waypointlist[12];
+	
+	double tas, heading, altituderate;
 	double dist, climb, dist_error;
 	
 	double totaldistance = 0;
@@ -47,15 +49,15 @@ int main(void){
 			
 			position_current = coord_fromdist(position_previous, dist, heading, climb);
 			
-			heading = depheading(position_current, waypoint_next);
-			altituderate = -ALTRATE_MOD * position_current.altitude + ALTRATE_MOD * waypoint_next.altitude;
+			heading = depheading(position_current, waypoint_nextpos);
+			altituderate = -ALTRATE_MOD * position_current.altitude + ALTRATE_MOD * waypoint_nextpos.altitude;
 			
 			totaldistance = totaldistance + dist;
 			printf("Latitude = %f, Longitude = %f, Altitude = %fm, Heading = %f, Distance left = %fm\n",
-				position_current.latitude * 180/M_PI, position_current.longitude * 180/M_PI, position_current.altitude,heading, coord_dist(position_current, waypoint_next));
+				position_current.latitude * 180/M_PI, position_current.longitude * 180/M_PI, position_current.altitude, heading, coord_dist(position_current, waypoint_nextpos));
 		}
 		else{
-			dist = coord_dist(position_current, waypoint_next);
+			dist = coord_dist(position_current, waypoint_nextpos);
 			climb = dist / tas * altituderate;
 			
 			position_current = coord_fromdist(position_previous, dist, heading, climb);
@@ -77,6 +79,7 @@ int main(void){
 	printf("Total distance traveled: %f\n", totaldistance);
 	printf("Number of theoretical subpoints at current TAS: %f\n", dist / (TIMESPAN * tas) - 1);
 	printf("Number of subpoints traveled at current TAS: %f\n", totaldistance / (TIMESPAN * tas) - 1);
+	printf("Final approach distance error: %f\n", disterror);
 	
 	return 0;
 }
