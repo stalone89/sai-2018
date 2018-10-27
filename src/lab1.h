@@ -12,18 +12,29 @@
 /* Feet to meter ratio */
 #define FT2METER 0.3048
 
+/* Character buffer */
+#define CHARBUFFER 100
+
+/* Coordinate structure, with latitude and longitude in radians and altitude in meters. */
+typedef struct {
+	double latitude;
+	double longitude;
+	double altitude;
+} Coord ;
+
 /* Coordinate structure, with latitude and longitude in radians and altitude in meters. */
 typedef struct {
 	double latitude;
 	double longitude;
 	double altitude;
 	double tas;
-} Coord ;
+	char* location;
+} Waypoint ;
 
 /* int read_file(void); */
 double coord_dist(Coord waypoint1, Coord waypoint2);
 Coord coord_fromdist(Coord waypoint1, double dist, double heading, double climb);
 double depheading(Coord waypoint1, Coord waypoint2);
 double appheading(Coord waypoint1, Coord waypoint2);
-int read_file(Coord* waypoint);
-Coord csv_waypoint_parse(char line[]);
+int read_file(Waypoint* waypoint);
+Waypoint csv_waypoint_parse(char line[]);
