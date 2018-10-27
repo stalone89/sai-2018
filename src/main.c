@@ -31,8 +31,8 @@ int main(void){
 	 * remain theoretically constant. */
 	
 	/* First two waypoints */
-	waypoint_previouspos.latitude = waypointlist[0].latitude; waypoint_previouspos.longitude = waypointlist[0].longtiude; waypoint_previouspos.altitude = waypointlist[0].altitude;
-	waypoint_nextpos.latitude = waypointlist[1].latitude; waypoint_nextpos.longitude = waypointlist[1].longtiude; waypoint_nextpos.altitude = waypointlist[1].altitude;
+	waypoint_previouspos.latitude = waypointlist[0].latitude; waypoint_previouspos.longitude = waypointlist[0].longitude; waypoint_previouspos.altitude = waypointlist[0].altitude;
+	waypoint_nextpos.latitude = waypointlist[1].latitude; waypoint_nextpos.longitude = waypointlist[1].longitude; waypoint_nextpos.altitude = waypointlist[1].altitude;
 	
 	position_current = waypoint_previouspos;
 	
@@ -43,7 +43,7 @@ int main(void){
 	for(;;){
 		position_previous = position_current;
 		
-		if(coord_dist(position_current, waypoint_next) > tas * TIMESPAN){
+		if(coord_dist(position_current, waypoint_nextpos) > tas * TIMESPAN){
 			dist = TIMESPAN * tas;
 			climb = TIMESPAN * altituderate;
 			
@@ -79,7 +79,7 @@ int main(void){
 	printf("Total distance traveled: %f\n", totaldistance);
 	printf("Number of theoretical subpoints at current TAS: %f\n", dist / (TIMESPAN * tas) - 1);
 	printf("Number of subpoints traveled at current TAS: %f\n", totaldistance / (TIMESPAN * tas) - 1);
-	printf("Final approach distance error: %f\n", disterror);
+	printf("Final approach distance error: %f\n", dist_error);
 	
 	return 0;
 }
