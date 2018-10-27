@@ -32,9 +32,9 @@ typedef struct {
 } Waypoint ;
 
 /* int read_file(void); */
-double coord_dist(Coord waypoint1, Coord waypoint2);
-Coord coord_fromdist(Coord waypoint1, double dist, double heading, double climb);
-double depheading(Coord waypoint1, Coord waypoint2);
-double appheading(Coord waypoint1, Coord waypoint2);
+double coord_dist(Coord coord1, Coord coord2);
+Coord coord_fromdist(Coord coord1, double dist, double heading, double climb);
+double depheading(Coord coord1, Coord coord2);
+double appheading(Coord coord1, Coord coord2);
 int read_file(Waypoint* waypoint);
 Waypoint csv_waypoint_parse(char line[]);
