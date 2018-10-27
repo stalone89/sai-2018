@@ -55,15 +55,15 @@ int read_file(Coord* waypointlist){
 		return 1;
 	}
 	
-	fscanf(fid,"%s\n", line); /* Skip first line */
+	fgets(line,100,fid); /* Skip first line */
 	
 	while (!feof(fid)){
-		fscanf(fid,"%s\n", line);
+		fgets(line,100,fid);
 		waypointlist[i] = csv_waypoint_parse(line);
 		printf("Latitude = %f, Longitude = %f, Altitude = %fm, TAS = %f\n", waypointlist[i].latitude, waypointlist[i].longitude, waypointlist[i].altitude, waypointlist[i].tas);
 		i++;
 	}
-	
+	fclose(fid);
 	return 0;
 }
 
