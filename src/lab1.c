@@ -5,9 +5,7 @@ double coord_dist(Coord waypoint1, Coord waypoint2){
 	 * Returns the horizontal distance between waypoints in meters. */
 	
 	double ortho = acos(cos(waypoint2.latitude) * cos(waypoint1.longitude - waypoint2.longitude) * cos(waypoint1.latitude) + sin(waypoint2.latitude) * sin(waypoint1.latitude));
-	double climb = waypoint2.altitude - waypoint1.altitude;
-	
-	return sqrt(pow(ortho * EARTH_RADIUS, 2) + pow(climb, 2));
+	return (ortho * (EARTH_RADIUS+waypoint1.altitude));
 }
 
 Coord coord_fromdist(Coord waypoint1, double dist, double heading, double climb){
