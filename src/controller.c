@@ -30,3 +30,13 @@ double plant_dynamics(double csignal, double TAS_current, double *delay_memory)
 	
 	return TAS_current;
 }
+
+double altitude_controller(double h_current, double hRef){
+	
+	double vspeed;
+	
+	vspeed = -alpha * h_current + alpha * hRef;
+	
+	return vspeed;
+	
+}
