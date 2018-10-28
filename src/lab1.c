@@ -45,9 +45,8 @@ int read_file(Waypoint* waypointlist){
 	 * Returns 0 in case of success, 1 in case of file opening failure. */
 	
 	char* filename = "waypoints.csv";
-	int i = 0;
-	
 	char line[100];
+	int i = 0;
 	
 	FILE* fid;
 	
@@ -58,11 +57,15 @@ int read_file(Waypoint* waypointlist){
 	
 	fgets(line,100,fid); /* Skip first line */
 	
-	while (!feof(fid)){
+	while(!feof(fid)){
 		fgets(line,100,fid);
-		waypointlist[i] = csv_waypoint_parse(line);
-		printf("Latitude = %f, Longitude = %f, Altitude = %fm, TAS = %f, Location = %s\n", waypointlist[i].latitude, waypointlist[i].longitude, waypointlist[i].altitude, waypointlist[i].tas, waypointlist[i].location);
-		i++;
+		printf("%s\n", line);
+		
+		if(strcmp(line, "\n") != 0){
+			waypointlist[i] = csv_waypoint_parse(line);
+			printf("Latitude = %f, Longitude = %f, Altitude = %fm, TAS = %f, Location = %s\n", waypointlist[i].latitude, waypointlist[i].longitude, waypointlist[i].altitude, waypointlist[i].tas, waypointlist[i].location);
+			i++;
+		}
 	}
 	
 	fclose(fid);
@@ -79,13 +82,11 @@ Waypoint csv_waypoint_parse(char line[]){
 	Waypoint waypoint;
 	
 	field = strtok(line, ",");
-	i++;
 	
 	while(field != NULL){
-		field = strtok(NULL, ",");
 		switch(i){
 			case 0:
-				waypoint.location = field;
+				strcpy(waypoint.location, field);
 			case 1:
 				sscanf(field, "%lf", &waypoint.latitude);
 			case 2:
@@ -95,6 +96,8 @@ Waypoint csv_waypoint_parse(char line[]){
 			case 4:
 				sscanf(field, "%lf", &waypoint.tas);
 		}
+		
+		field = strtok(NULL, ",");
 		i++;
 	}
 	

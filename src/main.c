@@ -21,6 +21,7 @@ int main(void){
 	 * waypoint_next.altitude = 392 * FT2METER; */
 	
 	read_file(waypointlist);
+	getchar();
 	
 	/* Here starts a loop run for every position check. This loop receives
 	 * the coordinates of the previous position check, the previous heading,
@@ -31,8 +32,12 @@ int main(void){
 	 * remain theoretically constant. */
 	
 	/* First two waypoints */
-	waypoint_previouspos.latitude = waypointlist[0].latitude; waypoint_previouspos.longitude = waypointlist[0].longitude; waypoint_previouspos.altitude = waypointlist[0].altitude;
-	waypoint_nextpos.latitude = waypointlist[1].latitude; waypoint_nextpos.longitude = waypointlist[1].longitude; waypoint_nextpos.altitude = waypointlist[1].altitude;
+	waypoint_previouspos.latitude = waypointlist[0].latitude * M_PI/180;
+	waypoint_previouspos.longitude = waypointlist[0].longitude * M_PI/180;
+	waypoint_previouspos.altitude = waypointlist[0].altitude;
+	waypoint_nextpos.latitude = waypointlist[1].latitude * M_PI/180;
+	waypoint_nextpos.longitude = waypointlist[1].longitude * M_PI/180;
+	waypoint_nextpos.altitude = waypointlist[1].altitude;
 	
 	position_current = waypoint_previouspos;
 	

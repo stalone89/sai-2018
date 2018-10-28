@@ -24,7 +24,7 @@ typedef struct {
 	double longitude;
 	double altitude;
 	double tas;
-	char* location;
+	char location[CHARBUFFER];
 } Waypoint ;
 
 /* int read_file(void); */
