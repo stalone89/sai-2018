@@ -2,89 +2,29 @@
 
 int main(void){
 	
-	/* Values for these come from file parsing */
 	Coord waypoint_previouspos, waypoint_nextpos;
-	Coord position_previous, position_current;
 	
 	Waypoint waypointlist[12];
+	Coord subpointlist[20] = { 0 };
 	
-	double tas, heading, altituderate;
-	double dist, climb, dist_error;
+	double tas;
 	
-	double totaldistance = 0;
-	
-	/* waypoint_previous.latitude = 38.7812995911 * M_PI/180;
-	 * waypoint_previous.longitude = -9.13591957092 * M_PI/180;
-	 * waypoint_previous.altitude = 374 * FT2METER;
-	 * waypoint_next.latitude = 49.0127983093 * M_PI/180;
-	 * waypoint_next.longitude = 2.54999995232 * M_PI/180;
-	 * waypoint_next.altitude = 392 * FT2METER; */
+	int i;
 	
 	read_file(waypointlist);
 	getchar();
 	
-	/* Here starts a loop run for every position check. This loop receives
-	 * the coordinates of the previous position check, the previous heading,
-	 * the velocity and altitude rate maintained, and the time that has
-	 * passed since the last position check.
-	 * In return, it defines the new heading and altitude rate to follow.
-	 * This loop is meant to run between two waypoints, so the velocity will
-	 * remain theoretically constant. */
-	
-	/* First two waypoints */
-	waypoint_previouspos.latitude = waypointlist[0].latitude * M_PI/180;
-	waypoint_previouspos.longitude = waypointlist[0].longitude * M_PI/180;
-	waypoint_previouspos.altitude = waypointlist[0].altitude;
-	waypoint_nextpos.latitude = waypointlist[1].latitude * M_PI/180;
-	waypoint_nextpos.longitude = waypointlist[1].longitude * M_PI/180;
-	waypoint_nextpos.altitude = waypointlist[1].altitude;
-	
-	position_current = waypoint_previouspos;
-	
-	tas = waypointlist[0].tas; /* m/s */
-	altituderate = 0; /* m/s */
-	
-	/* Start of theoretical loop */
-	for(;;){
-		position_previous = position_current;
+	for(i = 0; i < sizeof(waypointlist) / sizeof(Waypoint); i++){
+		waypoint_previouspos.latitude = waypointlist[i].latitude * M_PI/180;
+		waypoint_previouspos.longitude = waypointlist[i].longitude * M_PI/180;
+		waypoint_previouspos.altitude = waypointlist[i].altitude;
+		waypoint_nextpos.latitude = waypointlist[i+1].latitude * M_PI/180;
+		waypoint_nextpos.longitude = waypointlist[i+1].longitude * M_PI/180;
+		waypoint_nextpos.altitude = waypointlist[i+1].altitude;
+		tas = waypointlist[i].tas;
 		
-		if(coord_dist(position_current, waypoint_nextpos) > tas * TIMESPAN){
-			dist = TIMESPAN * tas;
-			climb = TIMESPAN * altituderate;
-			
-			position_current = coord_fromdist(position_previous, dist, heading, climb);
-			
-			heading = depheading(position_current, waypoint_nextpos);
-			altituderate = -ALTRATE_MOD * position_current.altitude + ALTRATE_MOD * waypoint_nextpos.altitude;
-			
-			totaldistance = totaldistance + dist;
-			printf("Latitude = %f, Longitude = %f, Altitude = %fm, Heading = %f, Distance left = %fm\n",
-				position_current.latitude * 180/M_PI, position_current.longitude * 180/M_PI, position_current.altitude, heading, coord_dist(position_current, waypoint_nextpos));
-		}
-		else{
-			dist = coord_dist(position_current, waypoint_nextpos);
-			climb = dist / tas * altituderate;
-			
-			position_current = coord_fromdist(position_previous, dist, heading, climb);
-			
-			totaldistance = totaldistance + dist;
-			
-			dist_error = coord_dist(position_current, waypoint_nextpos);
-			position_current = waypoint_nextpos;
-			
-			break;
-		}
+		gen_subpoints(subpointlist, waypoint_previouspos, waypoint_nextpos, tas);
 	}
-	/* End of theoretical loop */
-	/* End of first two waypoints */
-	
-	dist = coord_dist(waypoint_previouspos, waypoint_nextpos);
-	
-	printf("Distance between waypoints: %f\n", dist);
-	printf("Total distance traveled: %f\n", totaldistance);
-	printf("Number of theoretical subpoints at current TAS: %f\n", dist / (TIMESPAN * tas) - 1);
-	printf("Number of subpoints traveled at current TAS: %f\n", totaldistance / (TIMESPAN * tas) - 1);
-	printf("Final approach distance error: %f\n", dist_error);
 	
 	return 0;
 }

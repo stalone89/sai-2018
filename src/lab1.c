@@ -58,10 +58,10 @@ int read_file(Waypoint* waypointlist){
 	fgets(line,100,fid); /* Skip first line */
 	
 	while(!feof(fid)){
+		line[0] = '\0';
 		fgets(line,100,fid);
-		printf("%s\n", line);
 		
-		if(strcmp(line, "\n") != 0){
+		if(strlen(line) > 30){
 			waypointlist[i] = csv_waypoint_parse(line);
 			printf("Latitude = %f, Longitude = %f, Altitude = %fm, TAS = %f, Location = %s\n", waypointlist[i].latitude, waypointlist[i].longitude, waypointlist[i].altitude, waypointlist[i].tas, waypointlist[i].location);
 			i++;
@@ -102,4 +102,45 @@ Waypoint csv_waypoint_parse(char line[]){
 	}
 	
 	return waypoint;
+}
+
+int gen_subpoints(Coord* subpointlist, Coord waypoint_prev, Coord waypoint_next, double tas){
+	
+	Coord position_previous, position_current;
+	double heading, altituderate;
+	double dist, climb;
+	
+	int i = 0;
+	
+	position_current = waypoint_prev;
+	
+	altituderate = 0; /* m/s */
+	
+	position_previous = position_current;
+	
+	while(coord_dist(position_current, waypoint_next) > tas * TIMESPAN){
+		dist = TIMESPAN * tas;
+		climb = TIMESPAN * altituderate;
+		
+		position_current = coord_fromdist(position_previous, dist, heading, climb);
+		subpointlist[i] = position_current;
+		i++;
+		
+		heading = depheading(position_current, waypoint_next);
+		altituderate = -ALTRATE_MOD * position_current.altitude + ALTRATE_MOD * waypoint_next.altitude;
+		
+		printf("Latitude = %f, Longitude = %f, Altitude = %fm, Heading = %f, Distance left = %fm\n", position_current.latitude * 180/M_PI, position_current.longitude * 180/M_PI, position_current.altitude, heading, coord_dist(position_current, waypoint_next));
+		
+		position_previous = position_current;
+	}
+	
+	dist = coord_dist(position_current, waypoint_next);
+	climb = dist / tas * altituderate;
+	
+	position_current = coord_fromdist(position_previous, dist, heading, climb);
+	subpointlist[i] = position_current;
+	
+	printf("Latitude = %f, Longitude = %f, Altitude = %fm, Heading = %f, Distance left = %fm\n", position_current.latitude * 180/M_PI, position_current.longitude * 180/M_PI, position_current.altitude, heading, coord_dist(position_current, waypoint_next));
+	
+	return 0;
 }

@@ -34,3 +34,4 @@ double depheading(Coord coord1, Coord coord2);
 double appheading(Coord coord1, Coord coord2);
 int read_file(Waypoint* waypoint);
 Waypoint csv_waypoint_parse(char line[]);
+int gen_subpoints(Coord* subpointlist, Coord waypoint_prev, Coord waypoint_next, double tas);
