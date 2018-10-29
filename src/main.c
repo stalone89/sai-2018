@@ -29,19 +29,19 @@ int main(void){
 		waypoint_nextpos.longitude = waypointlist[i+1].longitude * M_PI/180;
 		waypoint_nextpos.altitude = waypointlist[i+1].altitude * FT2METER;
 		tas = waypointlist[i].tas;
-		
+		/*getchar();*/
 		totaldist += gen_subpoints(subpointlist, waypoint_previouspos, waypoint_nextpos, tas);
 		printf("Calculated subpoints between waypoint %d in %s and waypoint %d in %s\n", i+1, waypointlist[i].location, i+2, waypointlist[i+1].location);
-		
+		/*getchar();*/
 		position_current_true = waypoint_previouspos;
 		position_current_sensor = waypoint_previouspos;
 		
 		for(j = 0; subpointlist[j].altitude != 0; j++){
-			heading = depheading(position_current_true, subpointlist[j]);
-			printf("Heading: %f Lat1: %f Lat2: %f\n", heading, position_current_true.longitude * 180/M_PI, subpointlist[j].longitude * 180/M_PI);
+			heading = depheading_linear(position_current_sensor, subpointlist[j]);
+			printf("Heading: %f Lat1: %f Lat2: %f\n", heading, position_current_sensor.longitude * 180/M_PI, subpointlist[j].longitude * 180/M_PI);
 			
-			v_sensor = 201;
-			while(coord_dist(position_current_true, subpointlist[j]) > tas * deltat){
+			v_sensor = tas;
+			while(coord_dist_linear(position_current_sensor, subpointlist[j], heading) > tas * deltat){
 				altituderate = -ALTRATE_MOD * position_current_true.altitude + ALTRATE_MOD * subpointlist[j].altitude;
 				theta_true = asin(altituderate / tas);
 				position_current_true = iter(position_current_true, tas, deltat, theta_true, heading);
@@ -51,12 +51,20 @@ int main(void){
 				theta_sensor = asin(altituderate / v_sensor);
 				position_current_sensor = iter(position_current_sensor, v_sensor, deltat, theta_sensor, heading);
 				
-				printf("Real position: %f %f %fm, Dead-reckoning position: %f %f %fm, Distance left: %f, Treshold: %f\n", position_current_true.latitude * 180/M_PI, position_current_true.longitude * 180/M_PI, position_current_true.altitude, position_current_sensor.latitude * 180/M_PI, position_current_sensor.longitude * 180/M_PI, position_current_sensor.altitude, coord_dist(position_current_true, subpointlist[j]), tas * deltat);
-				getchar();
+				printf("Real position: %f %f %fm, Dead-reckoning position: %f %f %fm, Distance left: %f, Treshold: %f\n", position_current_true.latitude * 180/M_PI, position_current_true.longitude * 180/M_PI, position_current_true.altitude, position_current_sensor.latitude * 180/M_PI, position_current_sensor.longitude * 180/M_PI, position_current_sensor.altitude, coord_dist_linear(position_current_sensor, subpointlist[j], heading), tas * deltat);
+				/*getchar();*/
 			}
 			
 			printf("Next subpoint\n");
+			printf("Current target: %s", waypointlist[i+1].location);
+			if (strcmp(waypointlist[i+1].location,"London") == 0){
+				getchar();
+				printf("here\n");
+				}
+			/*getchar();*/
 		}
+		
+		getchar();
 	}
 	
 	printf("Total distance run is %fm\n", totaldist);

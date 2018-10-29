@@ -2,11 +2,22 @@
 
 double coord_dist(Coord coord1, Coord coord2){
 	/* Accepts a coord struct.
-	 * Returns the horizontal distance between coordinates in meters. */
+	 * Returns the great circle distance between coordinates in meters. */
 	
 	double ortho = acos(cos(coord2.latitude) * cos(coord1.longitude - coord2.longitude) * cos(coord1.latitude) + sin(coord2.latitude) * sin(coord1.latitude));
 	
 	return (ortho * (EARTH_RADIUS + coord1.altitude));
+}
+
+double coord_dist_linear(Coord coord1, Coord coord2, double heading){
+	/* Accepts a coord struct.
+	 * Returns the horizontal distance between coordinates in meters. */
+	
+	double distance;
+	
+	distance = (EARTH_RADIUS + coord1.altitude) * fabs(coord2.latitude - coord1.latitude) * fabs(1/(heading));
+		
+	return distance;
 }
 
 Coord coord_fromdist(Coord coord1, double dist, double heading, double climb){
@@ -24,7 +35,7 @@ Coord coord_fromdist(Coord coord1, double dist, double heading, double climb){
 
 double depheading(Coord coord1, Coord coord2){
 	/* Accepts two coord structs.
-	 * Returns departure heading (from north) in radians. */
+	 * Returns departure heading (from north) in radians using Great Circles (Orthodrome). */
 	
 	double depheading = atan2(-cos(coord2.latitude) * sin(coord1.longitude - coord2.longitude), -cos(coord2.latitude) * cos(coord1.longitude - coord2.longitude) * sin(coord1.latitude) + sin(coord2.latitude) * cos(coord1.latitude));
 	
@@ -33,11 +44,25 @@ double depheading(Coord coord1, Coord coord2){
 
 double appheading(Coord coord1, Coord coord2){
 	/* Accepts two coord structs.
-	 * Returns approach heading (from north) in radians. */
+	 * Returns approach heading (from north) in radians using Great Circles (Orthodrome). */
 	
 	double appheading = atan2(-sin(coord1.longitude - coord2.longitude) * cos(coord1.latitude), sin(coord2.latitude) * cos(coord1.longitude - coord2.longitude) * cos(coord1.latitude) - cos(coord2.latitude) * sin(coord1.latitude));
 	
 	return appheading;
+}
+
+double depheading_linear(Coord coord1, Coord coord2){
+	/* Accepts two coord structs.
+	 * Returns departure heading (from north) in radians using a Rhumb Line (loxodrome). */
+	
+	double depheading, sum_phi_1, sum_phi_2;
+	
+	sum_phi_1 = log(tan(M_PI * 0.25 + coord1.latitude*0.5));
+	sum_phi_2 = log(tan(M_PI * 0.25 + coord2.latitude*0.5));
+	
+	depheading=atan2((coord2.longitude - coord1.longitude),(sum_phi_2 - sum_phi_1));
+	
+	return depheading;
 }
 
 int read_file(Waypoint* waypointlist){
