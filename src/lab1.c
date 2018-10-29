@@ -104,7 +104,7 @@ Waypoint csv_waypoint_parse(char line[]){
 	return waypoint;
 }
 
-int gen_subpoints(Coord* subpointlist, Coord waypoint_prev, Coord waypoint_next, double tas){
+double gen_subpoints(Coord* subpointlist, Coord waypoint_prev, Coord waypoint_next, double tas){
 	
 	Coord position_previous, position_current;
 	double heading, altituderate;
@@ -112,15 +112,20 @@ int gen_subpoints(Coord* subpointlist, Coord waypoint_prev, Coord waypoint_next,
 	
 	int i = 0;
 	
+	double totaldist = 0;
+	
 	position_current = waypoint_prev;
 	
 	altituderate = 0; /* m/s */
 	
 	position_previous = position_current;
+	heading = depheading(position_current, waypoint_next);
 	
 	while(coord_dist(position_current, waypoint_next) > tas * TIMESPAN){
 		dist = TIMESPAN * tas;
 		climb = TIMESPAN * altituderate;
+		
+		totaldist += dist;
 		
 		position_current = coord_fromdist(position_previous, dist, heading, climb);
 		subpointlist[i] = position_current;
@@ -137,10 +142,30 @@ int gen_subpoints(Coord* subpointlist, Coord waypoint_prev, Coord waypoint_next,
 	dist = coord_dist(position_current, waypoint_next);
 	climb = dist / tas * altituderate;
 	
+	totaldist += dist;
+	
 	position_current = coord_fromdist(position_previous, dist, heading, climb);
 	subpointlist[i] = position_current;
 	
 	printf("Latitude = %f, Longitude = %f, Altitude = %fm, Heading = %f, Distance left = %fm\n", position_current.latitude * 180/M_PI, position_current.longitude * 180/M_PI, position_current.altitude, heading, coord_dist(position_current, waypoint_next));
 	
-	return 0;
+	
+	return totaldist;
+}
+
+Coord iter(Coord pos1, double v, double deltat, double theta, double heading){
+	
+	Coord pos2;
+	
+	double v_east, v_north, v_up;
+	
+	v_east = v * cos(theta) * sin(heading);
+	v_north = v * cos(theta) * cos(heading);
+	v_up = v * sin(theta);
+	
+	pos2.latitude = pos1.latitude + ((v_north * deltat) / (pos1.altitude + EARTH_RADIUS));
+	pos2.longitude = pos1.longitude + ((v_east * deltat) / (pos1.altitude + EARTH_RADIUS));
+	pos2.altitude = pos1.altitude + v_up * deltat;
+	
+	return pos2;
 }
