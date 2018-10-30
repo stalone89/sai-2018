@@ -67,7 +67,7 @@ double depheading_linear(Coord coord1, Coord coord2){
 
 int read_file(Waypoint* waypointlist){
 	/* Accepts a Waypoint array to fill with waypoints from a file.
-	 * Returns 0 in case of success, 1 in case of file opening failure. */
+	 * Returns -1 in case of file opening failure, and the line count otherwise. */
 	
 	char* filename = "waypoints.csv";
 	char line[100];
@@ -77,7 +77,7 @@ int read_file(Waypoint* waypointlist){
 	
 	if ((fid = fopen(filename,"r")) == NULL){
 		printf("Error opening waypoints.csv file.\n");
-		return 1;
+		return -1;
 	}
 	
 	fgets(line,100,fid); /* Skip first line */
@@ -95,7 +95,7 @@ int read_file(Waypoint* waypointlist){
 	
 	fclose(fid);
 	
-	return 0;
+	return i;
 }
 
 Waypoint csv_waypoint_parse(char line[]){
@@ -127,6 +127,17 @@ Waypoint csv_waypoint_parse(char line[]){
 	}
 	
 	return waypoint;
+}
+
+Coord waypoint_to_coord (Waypoint waypoint){
+	/* Accepts a waypoint and returns a coordinate struct with its position. */
+	Coord coordinate;
+	
+	coordinate.latitude = waypoint.latitude * M_PI/180;
+	coordinate.longitude = waypoint.longitude * M_PI/180;
+	coordinate.altitude = waypoint.altitude * FT2METER;
+	
+	return coordinate;
 }
 
 double gen_subpoints(Coord* subpointlist, Coord waypoint_prev, Coord waypoint_next, double tas){
