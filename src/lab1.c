@@ -51,6 +51,13 @@ double appheading(Coord coord1, Coord coord2){
 	return appheading;
 }
 
+double theta_path(Coord coor1, Coord coor2, double v_hor){
+	/* Accepts two coordinates and returns the climb angle from the first to
+	 * the second based on the altitude rate equation. */
+	double altituderate = -ALTRATE_MOD * coor1.altitude + ALTRATE_MOD * coor2.altitude;
+	return asin(altituderate / v_hor);
+}
+
 double depheading_linear(Coord coord1, Coord coord2){
 	/* Accepts two coord structs.
 	 * Returns departure heading (from north) in radians using a Rhumb Line (loxodrome). */
@@ -88,7 +95,7 @@ int read_file(Waypoint* waypointlist){
 		
 		if(strlen(line) > 30){
 			waypointlist[i] = csv_waypoint_parse(line);
-			printf("Latitude = %f, Longitude = %f, Altitude = %fm, TAS = %f, Location = %s\n", waypointlist[i].latitude, waypointlist[i].longitude, waypointlist[i].altitude, waypointlist[i].tas, waypointlist[i].location);
+			printf("Latitude = %f, Longitude = %f, Altitude = %fm, TAS = %f, Location = %s\n", waypointlist[i].latitude, waypointlist[i].longitude, waypointlist[i].altitude * FT2METER, waypointlist[i].tas, waypointlist[i].location);
 			i++;
 		}
 	}
