@@ -3,6 +3,9 @@
 
 \input{preamble}
 
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\setminted[c]{linenos, bgcolor = bg, breaklines} 
+
 \begin{document}
 
 \thispagestyle{empty}
@@ -13,17 +16,17 @@
 	\vspace{40mm} % --  Espaço em branco
 	\rule{\linewidth}{0.5pt} \\
     \vspace{2mm}
-	\Huge \textbf{FMS} \\
+	\Huge \textbf{Flight Management System and Dead-Reckoning Navigation} \\
 	\rule{\linewidth}{2pt} \\
 	\vspace{8mm} % -- Espaço em branco
-	\Large Description
+	\Large Design of a Flight Management System and implementation of dead-reckoning navigation
 	
 	\vspace{\fill} % --  Espaço em branco variável
 	
 	\normalsize
 	\begin{tabular}{r l}
-		Pedro \textsc{Afonso} & \textbf{88888} \\
-		João \textsc{Manito} & \textbf{88888} \\
+		Pedro \textsc{Afonso} & \textbf{66277} \\
+		João \textsc{Manito} & \textbf{73096} \\
 		Daniel \textsc{de Schiffart} & \textbf{81479}
 	\end{tabular}
 	
@@ -31,12 +34,87 @@
 	\Large Instituto Superior Técnico \\
 	Integrated Master's Degree in Aerospace Engineering \\
 	\vspace{1mm}
-	\large Integrated Avionics Systems
+	\large Integrated Avionic Systems
 	
 	\vspace{10mm} % --  Espaço em branco
 	\Large $2018/2019$
 \end{center}
 
 \pagebreak
+
+{\hypersetup{linkcolor = black} \tableofcontents}
+
+\pagebreak
+
+\begin{abstract}
+	For the first laboratory of the course of Integrated Avionic Systems the objective was to design a simple version of a \emph{Flight Management System} and use it to simulate a navigation across a series of pre-defined waypoints across a sphere-shaped earth. Further on, the development focused on the study of dead-reckoning navigation, its implementation within the Flight Management System and the comparison of a simulation with this feature against the original simulation. The final part of the laboratory shifted the focus to possible errors within the acquisition of flight velocity within the flight and ways to reduce these errors to obtain more accurate navigation. The entire work was to be implemented in C code and use a basic interface of both terminal and text-files for input and output of information.
+\end{abstract}
+
+\part{Route Distance}
+
+The first part of this laboratory project was to develop the basic functions to allow for basic simulated navigation. With the final objective of this part being to determine the total distance of a path comprised of a series of waypoints, the work was split into different components to allow for streamlined development.
+
+\section{Definition of Coordinates on a Spherical Earth}
+
+On a spherical Earth, the coordinates are given in latitude and longitude in relation to a reference equator and meridian, while altitude is given as the difference between a certain point's distance to the center of the Earth and the spherical Earth's radius. The value of the Earth's radius was defined as being $6378000$ meters.
+
+With this environmental information, the obvious approach for saving the data of waypoints and positions in the code would be with a definition of a C structure. Our code implements a \mintinline{c}{struct} with the \mintinline{c}{typedef} name of \mintinline{c}{Coord}, as represented in the file \texttt{lab1.h}.
+\begin{minted}[firstnumber = 15]{c}
+typedef struct {
+    double latitude;
+    double longitude;
+    double altitude;
+} Coord ;
+\end{minted}
+
+\section{Distance Determination}
+
+To determine the distance between two coordinates on a spherical earth, the first objective is to determine the distance of the shortest great-circle path. As we assume that the altitude (and therefore the radius) of the path is constant for each segment of the flight, this can be done using the radial distance between the two points and multiplying it by the radius of the path. Using $\phi$ as latitude and $\lambda$ as latitude, the radial distance $\theta$ between points $1$ and $2$ is given by equation \ref{eq:raddist}.
+\begin{gather} \label{eq:raddist}
+    \theta = \cos^{-1}{\left(\cos\phi_2\cos\left(\lambda_1 - \lambda_2\right)\cos\phi_1 + \sin\phi_2\sin\phi_1\right)}
+\end{gather}
+Defining the Earth radius as $R$ and the height of any coordinate as $h$, we can finally obtain the distance of the great-circle path between two coordinates as $d$, which is given by equation \ref{eq:raddist_m}.
+\begin{gather} \label{eq:raddist_m}
+    d = \theta \times (R + h_1)
+\end{gather}
+
+These equations have been implemented as C functions in the file \texttt{lab1.c} as visible below.
+\begin{minted}[firstnumber = 3]{c}
+double coord_dist(Coord coord1, Coord coord2){
+    /* Accepts a coord struct.
+     * Returns the great circle distance between coordinates in meters. */
+    
+    double ortho = acos(cos(coord2.latitude) * cos(coord1.longitude - coord2.longitude) * cos(coord1.latitude) + sin(coord2.latitude) * sin(coord1.latitude));
+    
+    return (ortho * (EARTH_RADIUS + coord1.altitude));
+}
+\end{minted}
+Applying this to a sequencial set of waypoints is a matter of iteration and cumulative sums to determine the total distance. However, an issue is raised when the altitude is not constant between points, as we consider the altitude constant between any two waypoints using the value of the first point of any segment. This will lead to some error in the measurement of altitudes, as sudden jumps of altitude will distort the distance travelled from reality by a little bit. The focus of this discussion is illustrated by figure \ref{tikz:consth_error} in two dimensions.
+\begin{figure}[ht]
+    \centering
+    \begin{tikzpicture}
+        \node (main) at (0,0) {};
+        \draw  (main) ellipse (3 and 3);
+        \draw (-3.5,0) node (v1) [label = {180:$P_1$}] {} arc (180:160:3.5);
+        \draw (-4.2286,1.5391) node (v3) {} arc (159.9998:140:4.5);
+        \draw (-3.0642,2.5712) arc (139.9997:120:4);
+        \draw (-2.75,4.7631) arc (120.0002:80:5.5);
+        \draw (0.8682,4.924) arc (80.0004:60:5);
+        \draw (2,3.4641) arc (60:20:4);
+        \node (v2) at (-3,0) {};
+        \draw (3.2889,1.1971) arc (20.0006:0:3.5);
+        \node (v4) at (3.5,0) [label = {0:$P_2$}] {};
+        \draw [dashed] (180:3) -- (180:3.5);
+        \draw [dashed] (160:3.5) -- (160:4.5);
+        \draw [dashed] (140:4.5) -- (140:4);
+        \draw [dashed] (120:4) -- (120:5.5);
+        \draw [dashed] (80:5.5) -- (80:5);
+        \draw [dashed] (60:5) -- (60:4);
+        \draw [dashed] (20:4) -- (20:3.5);
+        \draw [dashed] (0:3.5) -- (0:3);
+    \end{tikzpicture}
+    \caption{Simulation of the implemented distance calculation algorithm in 2D. Notice the separation of segments, the constant altitude in each of them and the irrealistic jumps of altitude between each of them.}
+    \label{tikz:consth_error}
+\end{figure}
 
 \end{document}
