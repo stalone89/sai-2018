@@ -17,11 +17,11 @@ Coord iter(Coord pos1, double v, double deltat, double theta, double heading){
 	return pos2;
 }
 
-double theta_path(Coord coor1, Coord coor2, double v_hor){
+double theta_path(Coord coor1, Coord coor2, double v_tas){
 	/* Accepts two coordinates and returns the climb angle from the first to
 	 * the second based on the altitude rate equation. */
 	double altituderate = -ALTRATE_MOD * coor1.altitude + ALTRATE_MOD * coor2.altitude;
-	return asin(altituderate / v_hor);
+	return asin(altituderate / v_tas);
 }
 
 
