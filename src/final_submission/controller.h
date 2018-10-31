@@ -4,8 +4,8 @@
 
 #include <math.h>
 
-#define kp 1
-#define ki 1
+#define kp 0.0001
+#define ki 0.000001
 #define delay 1
 #define alpha 1
 

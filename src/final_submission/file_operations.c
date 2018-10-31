@@ -24,7 +24,7 @@ int read_file(Waypoint* waypointlist){
 		
 		if(strlen(line) > 30){
 			waypointlist[i] = csv_waypoint_parse(line);
-			/*printf("Latitude = %f, Longitude = %f, Altitude = %fm, TAS = %f, Location = %s\n", waypointlist[i].latitude, waypointlist[i].longitude, waypointlist[i].altitude * FT2METER, waypointlist[i].tas, waypointlist[i].location);*/
+			printf("Latitude = %f, Longitude = %f, Altitude = %fm, TAS = %f, Location = %s\n", waypointlist[i].latitude, waypointlist[i].longitude, waypointlist[i].altitude * FT2METER, waypointlist[i].tas, waypointlist[i].location);
 			i++;
 		}
 	}
