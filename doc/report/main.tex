@@ -4,7 +4,8 @@
 \input{preamble}
 
 \definecolor{bg}{rgb}{0.95,0.95,0.95}
-\setminted[c]{linenos, bgcolor = bg, breaklines} 
+\setminted[c]{linenos, bgcolor = bg, breaklines}
+\setmintedinline[c]{bgcolor = {}} 
 
 \begin{document}
 
@@ -58,8 +59,8 @@ The first part of this laboratory project was to develop the basic functions to 
 
 On a spherical Earth, the coordinates are given in latitude and longitude in relation to a reference equator and meridian, while altitude is given as the difference between a certain point's distance to the center of the Earth and the spherical Earth's radius. The value of the Earth's radius was defined as being $6378000$ meters.
 
-With this environmental information, the obvious approach for saving the data of waypoints and positions in the code would be with a definition of a C structure. Our code implements a \mintinline{c}{struct} with the \mintinline{c}{typedef} name of \mintinline{c}{Coord}, as represented in the file \texttt{lab1.h}.
-\begin{minted}[firstnumber = 15]{c}
+With this environmental information, the obvious approach for saving the data of waypoints and positions in the code would be with a definition of a C structure. Our code implements a \mintinline{c}{struct} with the \mintinline{c}{typedef} name of \mintinline{c}{Coord}, as represented in the file \texttt{waypoints.h}.
+\begin{minted}[firstnumber = 9]{c}
 typedef struct {
     double latitude;
     double longitude;
@@ -67,7 +68,7 @@ typedef struct {
 } Coord ;
 \end{minted}
 
-\section{Distance Determination}
+\section{Distance Determination} \label{sec:dist_det}
 
 To determine the distance between two coordinates on a spherical earth, the first objective is to determine the distance of the shortest great-circle path. As we assume that the altitude (and therefore the radius) of the path is constant for each segment of the flight, this can be done using the radial distance between the two points and multiplying it by the radius of the path. Using $\phi$ as latitude and $\lambda$ as latitude, the radial distance $\theta$ between points $1$ and $2$ is given by equation \ref{eq:raddist}.
 \begin{gather} \label{eq:raddist}
@@ -77,7 +78,6 @@ Defining the Earth radius as $R$ and the height of any coordinate as $h$, we can
 \begin{gather} \label{eq:raddist_m}
     d = \theta \times (R + h_1)
 \end{gather}
-
 These equations have been implemented as C functions in the file \texttt{lab1.c} as visible below.
 \begin{minted}[firstnumber = 3]{c}
 double coord_dist(Coord coord1, Coord coord2){
@@ -113,110 +113,265 @@ Applying this to a sequencial set of waypoints is a matter of iteration and cumu
         \draw [dashed] (20:4) -- (20:3.5);
         \draw [dashed] (0:3.5) -- (0:3);
     \end{tikzpicture}
-    \caption{Simulation of the implemented distance calculation algorithm in 2D. Notice the separation of segments, the constant altitude in each of them and the irrealistic jumps of altitude between each of them.}
+    \caption{Simulation of the implemented distance calculation algorithm in 2D. Notice the separation of segments, the constant altitude in each of them and the unrealistic jumps of altitude between each of them.}
     \label{tikz:consth_error}
 \end{figure}
 
+\part{Dead-Reckoning Navigation}
 
-\subsection{File reading}
-\par The file is read by calling the function \mintinline{c}{read_file} with the file name between the brackets. We decided to use the function \mintinline{c}{fgets},in loop, to get all the lines with the waypoints written.
+The second part of this laboratory project developed on the work of the previous part to simulate a full flight from start to finish and to observe the effect of extra modifications and fixes on the accuracy of the final simulation. For that purpose, a flight plan comprised of waypoints was devised and a speed condition was applied to each segment.
 
-\begin{minted}
+\section{Flight Path Definition}
+
+For a simulation to occur, a flight plan was necessary. According to the assignment, the flight plan was comprised of twelve cities, with the final waypoint being equal to the first waypoint. A value for the true airspeed was also selected for each segment, and stored in the waypoint that preceeded it. With this information, a set of coordinates was selected for each city using the city's airport as a reference. The list of waypoints can be found in table \ref{tab:waypoints}.
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{c c c c c}
+        \bfseries City  & \bfseries Latitude    & \bfseries Longitude   & \bfseries Altitude ($ft$) & \bfseries TAS (\si{\meter\per\second})  \\
+        \hline
+        Lisbon          & $38.7812995911$       & $-9.13591957092$      & 374   & 0     \\
+        Paris           & $49.0127983093$       & $2.54999995232$       & 392   & 0     \\
+        Moscow          & $55.40879821777344$   & $37.90629959106445$   & 588   & 0     \\
+        Oslo            & $60.193901062012$     & $11.100399971008$     & 681   & 0     \\
+        Rome            & $41.8002778$          & $12.2388889$          & 13    & 0     \\
+        Madrid          & $40.471926$           & $-3.56264$            & 1998  & 0     \\
+        Funchal         & $32.697898864746$     & $-16.774499893188$    & 192   & 0     \\
+        Ponta Delgada   & $37.7411994934$       & $-25.6979007721$      & 259   & 0     \\
+        New York        & $40.63980103$         & $-73.77890015$        & 13    & 0     \\
+        Halifax         & $44.8807983398$       & $-63.5085983276$      & 477   & 0     \\
+        London          & $51.4706$             & $-0.461941$           & 83    & 0     \\
+        Lisbon          & $38.7812995911$       & $-9.13591957092$      & 374   & 0
+    \end{tabular}
+    \caption{Waypoints of the flight path used in this part of the laboratory project. Latitude and longitude are represented in decimal degrees, altitude is in feet and true airspeed is in meters per second.}
+    \label{tab:waypoints}
+\end{table}
+
+\subsection{Waypoint Input}
+
+The input of these waypoints was done using a comma-separated value text file (henceforth referred to as \texttt{csv}). The data found in table \ref{tab:waypoints} was left as-is when introduced into the file, using commas to separate each column in a line, removing all whitespace utilized (except in the header line). The content of the waypoint file, which was titled \texttt{waypoints.csv}, can be found below.
+\begin{minted}[bgcolor = bg]{text}
+City,Latitude,Longitude,Altitude[ft],TAS
+Lisbon,38.7812995911,-9.13591957092,374,200
+Paris,49.0127983093,2.54999995232,392,200
+Moscow,55.40879821777344,37.90629959106445,588,200
+Oslo,60.193901062012,11.100399971008,681,200
+Rome,41.8002778,12.2388889,13,200
+Madrid,40.471926,-3.56264,1998,200
+Funchal,32.697898864746,-16.774499893188,192,200
+Ponta Delgada,37.7411994934,-25.6979007721,259,200
+New York,40.63980103,-73.77890015,13,200
+Halifax,44.8807983398,-63.5085983276,477,200
+London,51.4706,-0.461941,83,200
+Lisbon,38.7812995911,-9.13591957092,374,200
+\end{minted}
+
+For this information, we created a separate structure from the \texttt{Coord} structure used previously to allow for the storage of more information. We called this structure \texttt{Waypoint}, which was defined as seen in file \texttt{waypoints.h}.
+\begin{minted}[firstnumber = 16]{c}
+typedef struct Waypoint{
+    double latitude;
+    double longitude;
+    double altitude;
+    double tas;
+    char location[BUFFER];
+} Waypoint ;
+\end{minted}
+
+The file is read by calling the function \mintinline{c}{read_file}, and the waypoints are returned in a \mintinline{c}{Waypoint} array whose pointer was provided as an argument to the function. We decided to use the function \mintinline{c}{fgets} in loop to get all the lines with the waypoints written.
+\begin{minted}[firstnumber = 68]{c}
 int read_file(Waypoint* waypointlist){
-	/* Accepts a Waypoint array to fill with waypoints from a file.
-	 * Returns 0 in case of success, 1 in case of file opening failure. */
-	
-	char* filename = "waypoints.csv";
-	char line[100];
-	int i = 0;
-	
-	FILE* fid;
-	
-	if ((fid = fopen(filename,"r")) == NULL){
-		printf("Error opening waypoints.csv file.\n");
-		return 1;
-	}
-	
-	fgets(line,100,fid); /* Skip first line */
-	
-	while(!feof(fid)){
-		line[0] = '\0';
-		fgets(line,100,fid);
-		
-		if(strlen(line) > 30){
-			waypointlist[i] = csv_waypoint_parse(line);
-			i++;
-		}
-	}
-	
-	fclose(fid);
-	
-	return 0;
+    /* Accepts a Waypoint array to fill with waypoints from a file.
+     * Returns 0 in case of success, 1 in case of file opening failure. */
+    
+    char* filename = "waypoints.csv";
+    char line[100];
+    int i = 0;
+    
+    FILE* fid;
+    
+    if ((fid = fopen(filename,"r")) == NULL){
+        printf("Error opening waypoints.csv file.\n");
+        return 1;
+    }
+    
+    fgets(line,100,fid); /* Skip first line */
+    
+    while(!feof(fid)){
+        line[0] = '\0';
+        fgets(line,100,fid);
+        
+        if(strlen(line) > 30){
+            waypointlist[i] = csv_waypoint_parse(line);
+            i++;
+        }
+    }
+    
+    fclose(fid);
+    
+    return 0;
 }
-
 \end{minted}
-
-
-\par Inside the loop longitude, latitude, altitude and True Air Speed values are stored in a structure named Waypoint. The function \mintinline{c}{csv_waypoint_parse(char line[])} store the waypoints values inside an structure vector named \mintinline{c}{Waypointlist[]}.    
-
-\begin{minted}
+Inside the loop, longitude, latitude, altitude and true airspeed values are stored in a \texttt{Waypoint} structure. The function \mintinline{c}{csv_waypoint_parse(char line[])} receives a string containing a line of the waypoint file and returns the obtained values inside a \texttt{Waypoint} structure. The separation of each value inside the line string was done using the \texttt{strtok}, using the expected comma token.
+\begin{minted}[firstnumber = 101]{c}
 Waypoint csv_waypoint_parse(char line[]){
-	/* Accepts a string formatted according to a line from the provided CSV file */
-	/* Returns the line's corresponding waypoint in a Waypoint struct */
-	
-	int i = 0;
-	char* field;
-	Waypoint waypoint;
-	
-	field = strtok(line, ",");
-	
-	while(field != NULL){
-		switch(i){
-			case 0:
-				strcpy(waypoint.location, field);
-			case 1:
-				sscanf(field, "%lf", &waypoint.latitude);
-			case 2:
-				sscanf(field, "%lf", &waypoint.longitude);
-			case 3:
-				sscanf(field, "%lf", &waypoint.altitude);
-			case 4:
-				sscanf(field, "%lf", &waypoint.tas);
-		}
-		
-		field = strtok(NULL, ",");
-		i++;
-	}
-	
-	return waypoint;
+    /* Accepts a string formatted according to a line from the provided CSV file */
+    /* Returns the line's corresponding waypoint in a Waypoint struct */
+    
+    int i = 0;
+    char* field;
+    Waypoint waypoint;
+    
+    field = strtok(line, ",");
+    
+    while(field != NULL){
+        switch(i){
+            case 0:
+                strcpy(waypoint.location, field);
+            case 1:
+                sscanf(field, "%lf", &waypoint.latitude);
+            case 2:
+                sscanf(field, "%lf", &waypoint.longitude);
+            case 3:
+                sscanf(field, "%lf", &waypoint.altitude);
+            case 4:
+                sscanf(field, "%lf", &waypoint.tas);
+        }
+        
+        field = strtok(NULL, ",");
+        i++;
+    }
+    
+    return waypoint;
 }
 \end{minted}
 
-\par The function \mintinline{c}{sscanf} was chosen to store the coordinates data values.
+\subsection{Theoretical distance for the flight plan}
 
-\par The main program prints the waypoints stored in a log file and console.
+To allow for the waypoint data stored in the received array to be used with the remaining functions, a \texttt{Coord} structure had to be extracted from every used waypoint. The function \mintinline{c}{waypoint_to_coord()} covers that functionality, receiving the stored data and making it usable with the necessary functions, by converting its latitude and longitude to radian format and converting the altitude to the corresponding value in SI units (in this case, meters).
 
-\begin{minted}
-waypoint_count = read_file(waypoint_list);
-
-
-
-	/*Print list of waypoints to the file and console*/
-
-	fprintf(fid_log, "=== Waypoint List ===\n");
-	for(i = 0; i < waypoint_count - 1; i++){
-		fprintf(fid_log, "Latitude = %f, Longitude = %f, Altitude = %fm, TAS = %f, Location = %s\n", waypoint_list[i].latitude, waypoint_list[i].longitude, waypoint_list[i].altitude * FT2METER, waypoint_list[i].tas, waypoint_list[i].location);
-	}
-	fprintf(fid_log, "\n");
-
-	printf( "=== Waypoint List ===\n");
-	for(i = 0; i < waypoint_count - 1; i++){
-		printf("Latitude = %f, Longitude = %f, Altitude = %fm, TAS = %f, Location = %s\n", waypoint_list[i].latitude, waypoint_list[i].longitude, waypoint_list[i].altitude * FT2METER, waypoint_list[i].tas, waypoint_list[i].location);
-	}
-	printf("\n");
+\begin{minted}{c}
+Coord waypoint_to_coord (Waypoint waypoint){
+    /* Accepts a waypoint and returns a coordinate struct with its position. */
+    Coord coordinate;
+    
+    coordinate.latitude = waypoint.latitude * M_PI/180;
+    coordinate.longitude = waypoint.longitude * M_PI/180;
+    coordinate.altitude = waypoint.altitude * FT2METER;
+    
+    return coordinate;
+}
 \end{minted}
 
+The next way point from the structure vector \mintinline{c}{waypoint_list} is also converted to compute the distance between the first. 
 
+\begin{minted}{c}
+printf("Started in city %s\n", waypoint_list[0].location);
+    printf("The waypoint count is %d\n", waypoint_count);
+    for(i = 0; i < waypoint_count; i++){
+        waypoint_prev_coor = waypoint_to_coord(waypoint_list[i]);
+        waypoint_next_coor = waypoint_to_coord(waypoint_list[i+1]);
+        
+        theodist += coord_dist(waypoint_prev_coor, waypoint_next_coor);
+    }
+    
+    printf("Total theoretical distance is %fm\n", theodist);
+\end{minted}
+
+The function \mintinline{c}{coord_dist()} receives the two waypoints and compute its distance. The formula is equation \ref{eq:raddist_m} and was explained in section \ref{sec:dist_det}.
+
+\subsection{True heading}
+
+The trajectory between the two waypoints was divided by segments that we called subpoints. The distance between two subpoints is defined by the true aispeed and time span relation. If we define $D$ as the distance between two consecutive waypoints and $d$ as the distance covered in each simulation step, with each step being a fixed $\Delta t$ of time, at speed $v_{TAS}$, we get
+\begin{gather*}
+    d = \frac{D}{v_{TAS} \times \Delta t}
+\end{gather*}
+\begin{minted}[linenos = false]{c}
+subpoint_count = coord_dist(waypoint_prev_coor, waypoint_next_coor) / (v_tas * TIMESPAN);
+\end{minted}
+On the other hand, the $\theta_{path}$ is given by
+\begin{gather*}
+    \theta_{path} = arcsen\left(\frac{\frac{dh}{dt}}{v_{TAS}}\right)
+\end{gather*}
+where the altitude rate $dh/dt$ is given by
+\begin{gather*}
+    \frac{dh}{dt}=-\alpha h(t) - \alpha h_r(t)
+\end{gather*}
+at any given time, where $h(t)$ is the current altitude and $h_r(t)$ the current target altitude.
+
+\begin{minted}{c}
+double theta_path(Coord coor1, Coord coor2, double v_tas){
+    /* Accepts two coordinates and returns the climb angle from the first to
+     * the second based on the altitude rate equation. */
+    double altituderate = -ALTRATE_MOD * coor1.altitude + ALTRATE_MOD * coor2.altitude;
+    return asin(altituderate / v_tas);
+}
+\end{minted}
+
+The true heading is obtained by a function \mintinline{c}{depheading(position_current, waypoint_next_coor)} which receives the current position, in a specific subpoint and the following waypoint. This is the formula to get $\psi_T$ from the coordinates of two different points: 
+\begin{gather*}
+    \psi_T = \tan^{-1}\left(\frac{-\cos\phi_2\sin(\lambda_1 - \lambda_2)}{-\cos\phi_2\cos(\lambda_1 - \lambda_2)\sin\phi_1 + \sin\phi_2\cos\phi_1}\right)
+\end{gather*} 
+
+\begin{minted}{c}
+double depheading(Coord coord1, Coord coord2){
+    /* Accepts two coord structs.
+     * Returns departure heading (from north) in radians using Great Circles (Orthodrome). */
+    
+    double depheading = atan2(-cos(coord2.latitude) * sin(coord1.longitude - coord2.longitude), -cos(coord2.latitude) * cos(coord1.longitude - coord2.longitude) * sin(coord1.latitude) + sin(coord2.latitude) * cos(coord1.latitude));
+    
+    return depheading;
+}
+\end{minted}
+
+For each time $t$, there is a true heading. So a loop was implemented with the functions described above and \mintinline{c}{coord_fromdist}. This new function gives us the next subpoint exact position, with the new coordinates. The input is the current position, the distance travelled, the heading and the climb. The three coordinates are given by the following formulas:
+
+\begin{align*}
+    \phi_2 &= \sin^{-1}\left(sin(\phi_1)\cos\left(\frac{d}{R}\right) + \cos\phi_1\sin\left(\frac{d}{R}\right)\cos\psi\right) \\
+    \lambda_2 &= \lambda_1 + \tan^{-1}\left(\frac{\sin\psi\sin\left(\frac{d}{R}\right)\cos\phi_1}{\cos\left(\frac{d}{R}\right) - \sin\phi_1\sin\phi_2}\right)
+\end{align*}  
+
+
+\begin{minted}{c}
+Coord coord_fromdist(Coord coord1, double dist, double heading, double climb){
+    /* Accepts a coord struct, a distance in meters, a heading in radians, and a climb distance in meters.
+     * Returns a coord struct. */
+    
+    Coord coord2;
+    
+    coord2.latitude = asin(sin(coord1.latitude) * cos(dist / EARTH_RADIUS) + cos(coord1.latitude) * sin(dist / EARTH_RADIUS) * cos(heading));
+    coord2.longitude = coord1.longitude + atan2(sin(heading) * sin(dist / EARTH_RADIUS) * cos(coord1.latitude), cos(dist / EARTH_RADIUS) - sin(coord1.latitude) * sin(coord2.latitude));
+    coord2.altitude = coord1.altitude + climb;
+    
+    return coord2;
+}
+\end{minted}
+
+To end the loop, the log file is updated with the new data. All the process is repeated again for each trajectory segment until arrive to the next waypoint.
+
+
+
+
+\begin{minted}{c}
+        for(j = 0; j < floor(subpoint_count); j++){
+            theta = theta_path(position_current, waypoint_next_coor, v_tas);
+            heading = depheading(position_current, waypoint_next_coor);
+            
+            /* position_current = iter(position_current, v_tas, TIMESPAN, theta, heading); */
+            position_current = coord_fromdist(position_current, v_tas * TIMESPAN, heading, v_tas * sin(theta));
+            /*fprintf(f, "Longitude = %f, Latitude = %f, Altitude = %fm, Distance left = %fm, Subpoint %d\n", position_current.latitude * 180/M_PI, position_current.longitude * 180/M_PI, position_current.altitude, coord_dist(position_current, waypoint_next_coor), j);*/
+            /* totaldist += v_tas * TIMESPAN; */
+            runtime += TIMESPAN;
+            update_log(fid_log, runtime, theta, v_tas, v_tas, heading, position_current, position_current);
+            
+        }
+\end{minted}
+
+\subsection{Sensor included}
+
+The error measurements caused by the sensor, with $T=20min$, are:
+
+\begin{equation}
+V_m(t)=V_{TAS}(1+0.01*sen(\frac{2\pi t}{T}))
+\end{equation}
 
 
 
