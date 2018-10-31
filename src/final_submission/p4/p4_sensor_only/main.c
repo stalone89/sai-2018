@@ -9,9 +9,8 @@ int main (void){
 
 	Waypoint waypoint_list[BUFFER];
 	
-	int i, j;
+	int i;
 	int waypoint_count;
-	double subpoint_count;
 	double theodist = 0;
 	/* double totaldist = 0; */
 	double runtime = 0;
@@ -20,7 +19,7 @@ int main (void){
 	Coord waypoint_prev_coor, waypoint_next_coor;
 	Coord position_current_sensor, position_current_true;
 	
-	double v_tas, v_m, theta_true, theta_sensor, heading, distance, runtime_delta, csignal;
+	double v_tas, v_m, theta_true, theta_sensor, heading, distance, runtime_delta;
 
 	/*double integral_acc = 0;
 	double delay_memory = 0;*/

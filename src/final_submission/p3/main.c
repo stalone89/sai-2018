@@ -9,9 +9,8 @@ int main (void){
 
 	Waypoint waypoint_list[BUFFER];
 	
-	int i, j;
+	int i;
 	int waypoint_count;
-	double subpoint_count;
 	double theodist = 0;
 	/* double totaldist = 0; */
 	double runtime = 0;
