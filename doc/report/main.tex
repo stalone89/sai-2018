@@ -145,7 +145,6 @@ int read_file(Waypoint* waypointlist){
 		
 		if(strlen(line) > 30){
 			waypointlist[i] = csv_waypoint_parse(line);
-			printf("Latitude = %f, Longitude = %f, Altitude = %fm, TAS = %f, Location = %s\n", waypointlist[i].latitude, waypointlist[i].longitude, waypointlist[i].altitude, waypointlist[i].tas, waypointlist[i].location);
 			i++;
 		}
 	}
@@ -158,7 +157,7 @@ int read_file(Waypoint* waypointlist){
 \end{minted}
 
 
-\par Inside the loop longitude, latitude, altitude and True Air Speed values are printed and stored in a structure named Waypoint. The function \mintinline{c}{csv_waypoint_parse(char line[])} store the waypoints values inside an structure vector named \mintinline{c}{Waypointlist[]}.    
+\par Inside the loop longitude, latitude, altitude and True Air Speed values are stored in a structure named Waypoint. The function \mintinline{c}{csv_waypoint_parse(char line[])} store the waypoints values inside an structure vector named \mintinline{c}{Waypointlist[]}.    
 
 \begin{minted}
 Waypoint csv_waypoint_parse(char line[]){
@@ -193,9 +192,31 @@ Waypoint csv_waypoint_parse(char line[]){
 }
 \end{minted}
 
-The function \mintinline{c}{sscanf} was chosen to store the coordinates data values.
+\par The function \mintinline{c}{sscanf} was chosen to store the coordinates data values.
 
-\end{document}
+\par The main program prints the waypoints stored in a log file and console.
+
+\begin{minted}
+waypoint_count = read_file(waypoint_list);
+
+
+
+	/*Print list of waypoints to the file and console*/
+
+	fprintf(fid_log, "=== Waypoint List ===\n");
+	for(i = 0; i < waypoint_count - 1; i++){
+		fprintf(fid_log, "Latitude = %f, Longitude = %f, Altitude = %fm, TAS = %f, Location = %s\n", waypoint_list[i].latitude, waypoint_list[i].longitude, waypoint_list[i].altitude * FT2METER, waypoint_list[i].tas, waypoint_list[i].location);
+	}
+	fprintf(fid_log, "\n");
+
+	printf( "=== Waypoint List ===\n");
+	for(i = 0; i < waypoint_count - 1; i++){
+		printf("Latitude = %f, Longitude = %f, Altitude = %fm, TAS = %f, Location = %s\n", waypoint_list[i].latitude, waypoint_list[i].longitude, waypoint_list[i].altitude * FT2METER, waypoint_list[i].tas, waypoint_list[i].location);
+	}
+	printf("\n");
+\end{minted}
+
+
 
 
 
