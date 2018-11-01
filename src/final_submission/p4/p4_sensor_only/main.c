@@ -81,12 +81,12 @@ int main (void){
 
 		fprintf(fid_log, "=== From %s to %s ===\n", waypoint_list[i].location, waypoint_list[i+1].location);
 		fprintf(fid_log, "%s has coordinates %f %f and altitude %fm, %s has coordinates %f %f and altitude %fm\n", waypoint_list[i].location, waypoint_list[i].latitude*(M_PI/180), waypoint_list[i].longitude*(M_PI/180), waypoint_list[i].altitude * FT2METER, waypoint_list[i+1].location, waypoint_list[i+1].latitude*(M_PI/180), waypoint_list[i+1].longitude*(M_PI/180), waypoint_list[i+1].altitude * FT2METER);
-		fprintf(fid_log,"Time	Latitude(DR)	Longitude(DR)	Altitude(DR)	Latitude(True)	Longitude(True)	Altitude(True)	TAS		TAS(noisy)	True Heading	Theta_path\n");
+		fprintf(fid_log,"Time	Latitude(DR)	Longitude(DR)	Altitude(DR)	Latitude(True)	Longitude(True)	Altitude(True)	TAS		TAS(noisy)	True Heading	Theta_path 	Theta_path_true\n");
 
 		fprintf(fid_errors, "=== From %s to %s ===\n", waypoint_list[i].location, waypoint_list[i+1].location);
 		fprintf(fid_errors, "%s has coordinates %f %f and altitude %fm, %s has coordinates %f %f and altitude %fm\n", waypoint_list[i].location, waypoint_list[i].latitude*(M_PI/180), waypoint_list[i].longitude*(M_PI/180), waypoint_list[i].altitude * FT2METER, waypoint_list[i+1].location, waypoint_list[i+1].latitude*(M_PI/180), waypoint_list[i+1].longitude*(M_PI/180), waypoint_list[i+1].altitude * FT2METER);
 
-		update_log(fid_log, runtime, theta_sensor, v_tas, v_m, heading, position_current_sensor, position_current_true);	
+		update_log(fid_log, runtime, theta_sensor, theta_true, v_tas, v_m, heading, position_current_sensor, position_current_true);	
 		fprintf(fid_errors,"Position eror: %f\n", coord_dist(position_current_sensor, position_current_true));
 
 		/*Define the distance threshold as the minimum spatial resolution for the simulation at reference VTAS*/
@@ -113,7 +113,7 @@ int main (void){
 
 			
 
-			update_log(fid_log, runtime, theta_sensor, v_tas, v_m, heading, position_current_sensor, position_current_true);
+			update_log(fid_log, runtime, theta_sensor, theta_true, v_tas, v_m, heading, position_current_sensor, position_current_true);
 			fprintf(fid_errors,"Position eror: %f\n", coord_dist(position_current_sensor, position_current_true));
 
 		} while (distance >= threshold);

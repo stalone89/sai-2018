@@ -79,9 +79,9 @@ FILE* create_log(char filepath[]){
 	return fp;
 }
 	
-void update_log(FILE* fp, int time, float theta_path, float VTAS, float Vm, float true_heading, Coord position, Coord position_true){
+void update_log(FILE* fp, int time, float theta_path, float theta_path_true, float VTAS, float Vm, float true_heading, Coord position, Coord position_true){
 	
-	fprintf(fp, "%u\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n", time,position.latitude, position.longitude, position.altitude, position_true.latitude, position_true.longitude, position_true.altitude, VTAS, Vm, true_heading, theta_path);
+	fprintf(fp, "%u\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n", time,position.latitude, position.longitude, position.altitude, position_true.latitude, position_true.longitude, position_true.altitude, VTAS, Vm, true_heading, theta_path, theta_path_true);
 	
 	return;
 	
