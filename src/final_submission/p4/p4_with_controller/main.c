@@ -105,7 +105,7 @@ int main (void){
 			/*v_m = v_tas * (1+0.01*sin(2*M_PI*(runtime_delta/(20*60))));*/
 			v_m = v_tas * (1+0.01*sin(2*M_PI*(runtime/(20*60))));
 
-			theta_true = theta_path(position_current_sensor, waypoint_next_coor, v_tas);
+			theta_true = theta_path(position_current_true, waypoint_next_coor, v_tas);
 			position_current_true = update_position(position_current_true, v_tas, TIMESPAN, theta_true, heading);
 
 			theta_sensor = theta_path(position_current_sensor, waypoint_next_coor, v_m);
