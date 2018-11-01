@@ -136,6 +136,48 @@ Waypoint csv_waypoint_parse(char line[]){
 	return waypoint;
 }
 
+Waypoint csv_waypoint_parse_dms(char line[]){
+	/* Accepts a string formatted according to a line from the provided CSV file */
+	/* Returns the line's corresponding waypoint in a Waypoint struct */
+	
+	int i = 0;
+	char* field;
+	Waypoint waypoint;
+	double degrees, minutes, seconds;
+	
+	field = strtok(line, ",");
+	
+	while(field != NULL){
+		switch(i){
+			case 0:
+				strcpy(waypoint.location, field);
+			case 1:
+				sscanf(field, "%lf°%lf'%lf''", &degrees, &minutes, &seconds);
+				waypoint.latitude = degrees + minutes/60 + seconds/3600;
+			case 2:
+				if(strcmp(field, "S") == 0){
+					waypoint.latitude = -waypoint.latitude;
+				}
+			case 3:
+				sscanf(field, "%lf°%lf'%lf''", &degrees, &minutes, &seconds);
+				waypoint.longitude = degrees + minutes/60 + seconds/3600;
+			case 4:
+				if(strcmp(field, "W") == 0){
+					waypoint.longitude = -waypoint.longitude;
+				}
+			case 5:
+				sscanf(field, "%lf", &waypoint.altitude);
+			case 6:
+				sscanf(field, "%lf", &waypoint.tas);
+		}
+		
+		field = strtok(NULL, ",");
+		i++;
+	}
+	
+	return waypoint;
+}
+
 Coord waypoint_to_coord (Waypoint waypoint){
 	/* Accepts a waypoint and returns a coordinate struct with its position. */
 	Coord coordinate;
