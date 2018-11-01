@@ -65,6 +65,7 @@ int main (void){
 	printf("Total theoretical distance is %fm\n", theodist);
 
 	waypoint_prev_coor = waypoint_to_coord(waypoint_list[0]);
+	position_current_true=waypoint_prev_coor;
 	v_m = waypoint_list[0].tas;
 	v_tas = waypoint_list[0].tas;
 
