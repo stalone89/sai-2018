@@ -51,6 +51,13 @@ double appheading(Coord coord1, Coord coord2){
 	return appheading;
 }
 
+double theta_path(Coord coor1, Coord coor2, double v_hor){
+	/* Accepts two coordinates and returns the climb angle from the first to
+	 * the second based on the altitude rate equation. */
+	double altituderate = -ALTRATE_MOD * coor1.altitude + ALTRATE_MOD * coor2.altitude;
+	return asin(altituderate / v_hor);
+}
+
 double depheading_linear(Coord coord1, Coord coord2){
 	/* Accepts two coord structs.
 	 * Returns departure heading (from north) in radians using a Rhumb Line (loxodrome). */
@@ -67,7 +74,7 @@ double depheading_linear(Coord coord1, Coord coord2){
 
 int read_file(Waypoint* waypointlist){
 	/* Accepts a Waypoint array to fill with waypoints from a file.
-	 * Returns 0 in case of success, 1 in case of file opening failure. */
+	 * Returns -1 in case of file opening failure, and the line count otherwise. */
 	
 	char* filename = "waypoints.csv";
 	char line[100];
@@ -77,7 +84,7 @@ int read_file(Waypoint* waypointlist){
 	
 	if ((fid = fopen(filename,"r")) == NULL){
 		printf("Error opening waypoints.csv file.\n");
-		return 1;
+		return -1;
 	}
 	
 	fgets(line,100,fid); /* Skip first line */
@@ -88,14 +95,14 @@ int read_file(Waypoint* waypointlist){
 		
 		if(strlen(line) > 30){
 			waypointlist[i] = csv_waypoint_parse(line);
-			printf("Latitude = %f, Longitude = %f, Altitude = %fm, TAS = %f, Location = %s\n", waypointlist[i].latitude, waypointlist[i].longitude, waypointlist[i].altitude, waypointlist[i].tas, waypointlist[i].location);
+			printf("Latitude = %f, Longitude = %f, Altitude = %fm, TAS = %f, Location = %s\n", waypointlist[i].latitude, waypointlist[i].longitude, waypointlist[i].altitude * FT2METER, waypointlist[i].tas, waypointlist[i].location);
 			i++;
 		}
 	}
 	
 	fclose(fid);
 	
-	return 0;
+	return i;
 }
 
 Waypoint csv_waypoint_parse(char line[]){
@@ -127,6 +134,59 @@ Waypoint csv_waypoint_parse(char line[]){
 	}
 	
 	return waypoint;
+}
+
+Waypoint csv_waypoint_parse_dms(char line[]){
+	/* Accepts a string formatted according to a line from the provided CSV file */
+	/* Returns the line's corresponding waypoint in a Waypoint struct */
+	
+	int i = 0;
+	char* field;
+	Waypoint waypoint;
+	double degrees, minutes, seconds;
+	
+	field = strtok(line, ",");
+	
+	while(field != NULL){
+		switch(i){
+			case 0:
+				strcpy(waypoint.location, field);
+			case 1:
+				sscanf(field, "%lf°%lf'%lf''", &degrees, &minutes, &seconds);
+				waypoint.latitude = degrees + minutes/60 + seconds/3600;
+			case 2:
+				if(strcmp(field, "S") == 0){
+					waypoint.latitude = -waypoint.latitude;
+				}
+			case 3:
+				sscanf(field, "%lf°%lf'%lf''", &degrees, &minutes, &seconds);
+				waypoint.longitude = degrees + minutes/60 + seconds/3600;
+			case 4:
+				if(strcmp(field, "W") == 0){
+					waypoint.longitude = -waypoint.longitude;
+				}
+			case 5:
+				sscanf(field, "%lf", &waypoint.altitude);
+			case 6:
+				sscanf(field, "%lf", &waypoint.tas);
+		}
+		
+		field = strtok(NULL, ",");
+		i++;
+	}
+	
+	return waypoint;
+}
+
+Coord waypoint_to_coord (Waypoint waypoint){
+	/* Accepts a waypoint and returns a coordinate struct with its position. */
+	Coord coordinate;
+	
+	coordinate.latitude = waypoint.latitude * M_PI/180;
+	coordinate.longitude = waypoint.longitude * M_PI/180;
+	coordinate.altitude = waypoint.altitude * FT2METER;
+	
+	return coordinate;
 }
 
 double gen_subpoints(Coord* subpointlist, Coord waypoint_prev, Coord waypoint_next, double tas){

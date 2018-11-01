@@ -8,8 +8,8 @@
 
 #define ALTRATE_MOD 0.001	/* Altitude rate modifier */
 #define FT2METER 0.3048		/* Feet to meter ratio */
-#define CHARBUFFER 100		/* Character buffer */
-#define TIMESPAN 600		/* Period between segments in seconds */
+#define BUFFER 100			/* Array initializing buffer */
+#define TIMESPAN 60			/* Period between segments in seconds */
 
 /* Coordinate structure, with latitude and longitude in radians and altitude in meters. */
 typedef struct {
@@ -24,7 +24,7 @@ typedef struct {
 	double longitude;
 	double altitude;
 	double tas;
-	char location[CHARBUFFER];
+	char location[BUFFER];
 } Waypoint ;
 
 double coord_dist(Coord coord1, Coord coord2);
@@ -35,5 +35,8 @@ double appheading(Coord coord1, Coord coord2);
 double depheading_linear(Coord coord1, Coord coord2);
 int read_file(Waypoint* waypoint);
 Waypoint csv_waypoint_parse(char line[]);
+Waypoint csv_waypoint_parse_dms(char line[]);
+Coord waypoint_to_coord (Waypoint waypoint);
 double gen_subpoints(Coord* subpointlist, Coord waypoint_prev, Coord waypoint_next, double tas);
 Coord iter(Coord pos1, double v, double deltat, double theta, double heading);
+double theta_path(Coord coor1, Coord coor2, double v_hor);
