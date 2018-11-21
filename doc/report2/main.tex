@@ -1,0 +1,53 @@
+% arara: xelatex: { shell: yes, synctex: yes }
+%\RequirePackage[l2tabu, orthodox]{nag}
+\documentclass{article}
+
+\input{preamble}
+
+\begin{document}
+
+\begin{titlepage}
+
+\includegraphics[viewport=9.5cm 11cm 0cm 0cm,scale=0.29]{IST_A_CMYK_POS}
+	
+\begin{center}
+	\vspace{40mm} % --  Espaço em branco
+	\rule{\linewidth}{0.5pt} \\
+    \vspace{2mm}
+	{\Huge \textbf{Aircraft Altitude Control and Fault Processing}} \\
+	\rule{\linewidth}{2pt} \\
+	\vspace{8mm} % -- Espaço em branco
+	{\Large Control of an aircraft's altitude based on its sensor inputs and processing and mitigation of mid-flight system faults}
+	
+	\vspace{\fill} % --  Espaço em branco variável
+	
+	\begin{tabular}{r l}
+		Pedro \textsc{Afonso} & \textbf{66277} \\
+		João \textsc{Manito} & \textbf{73096} \\
+		Daniel \textsc{de Schiffart} & \textbf{81479}
+	\end{tabular}
+	
+	\vspace{10mm} % --  Espaço em branco
+	{\Large Instituto Superior Técnico} \\
+	{\Large Integrated Master's Degree in Aerospace Engineering} \\
+	\vspace{1mm}
+	{\large Integrated Avionic Systems}
+	
+	\vspace{10mm} % --  Espaço em branco
+	{\Large $2018/2019$}
+\end{center}
+\end{titlepage}
+
+{\hypersetup{linkcolor = black} \tableofcontents}
+
+\begin{abstract}
+	The objective of the second laboratory for this course was to control an aircraft's altitude and movement based on the input provided by its sensors and the transmission of data throughout the aircraft's onboard systems via its Local Area Network, characterizing the data protocols and preparing data for transmission. The second part of this laboratory had its focus more directed to the possibility of mid-flight faults to various aircraft systems, the handling of these faults and the simulation of data to maintain the control of the aircraft's altitude mentioned in the first part in the presence of faults in any of the crucial systems for this process. The work was to be implemented in C code for the major part of its simulations, with an initial theoretical segment being done with the use of \textsc{MATLAB} to obtain fixed results relevant to the work.
+\end{abstract}
+
+\part{Altitude Control}
+
+ARINC 429 uses 32 bits. Of these 32 bits, 19 bits are used for data storage with the remainder being used for handshake definitions and other assorted packet-related data. Data is encoded in BCD. Knowing that a tenth of a degree of accuracy is needed, we can calculate the amount of bits BCD needs to encode any value within a pre-defined range.
+
+Assuming a maximum of $999.9$ degrees celcius (reasonable working range, as air temperatures will only get lower with altitude and sea-level temperature averages 25 degrees, while negative temperatures cap out at $\num{-273.15}\degree C$), that gives us four decimal slots total. From packed BCD, with four decimal digits required, we can use $4 \times 4 = 16$ bits for the numeric value, and an extra bit for signal. If we use a Kelvin degree notation we can eliminate the need for a signal bit.
+
+\end{document}

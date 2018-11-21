@@ -1,2 +1,9 @@
 src/lab1
 *.*~
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.toc
+doc/report2/*.pdf
+
